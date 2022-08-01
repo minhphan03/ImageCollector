@@ -1,0 +1,39 @@
+- Write a web server to collect images from customer.
+
+    - API:
+        - upload-image (POST): use to send an image to web server
+            - input: image(png, jpg)
+            - response: uuid of image
+            - handler: 
+                - save image to public folder
+                - save a json object to mongodb : {uuid: image-uuid, path: image-path}
+        - download-image: download image from server
+            - input: uuid
+            - output: image
+            - handler:
+                - query mongodb to get image path
+                - response image to customer
+
+    - UI:
+        - Upload image page: upload image
+            - Button to upload image
+            - Display image UUID when uploading finished
+        - display image page: display image base on uuid
+            - Form to input UUID
+            - Display image when submit
+
+
+- Write docker/docker-compose to build apllication
+- Upload to git (TMA/personal):
+    - Have 2 feature branches for api and ui
+    - Have readme
+
+- Library:
+    - Tornado (asynchronus)
+    - Pymongo/Motor
+    - uuid
+    - base64
+    
+
+Advance: Write client to test the apllication using tornado
+

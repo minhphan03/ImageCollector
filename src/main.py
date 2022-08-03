@@ -1,15 +1,17 @@
-from tornado.web import Application, RequestHandler
-from tornado.ioloop import IOLoop
+from tornado.web import Application
 from tornado.options import define, options
 import tornado.httpserver
-import uuid, sys
 from os import path
 import base64
-import asyncio
+import asyncio, sys
+
+from download import DownloadHandler
+from upload import UploadHandler
+from menu import MenuHandler
 
 settings = {
-    'template_path': 'src/templates',
-    'static_path': 'static',
+    'template_path': 'templates',
+    'static_path': 'public/css',
     'xsrf_cookies': False
 }
 
@@ -17,29 +19,6 @@ define("port", default=8888, help='run on the given port', type=int)
 
 PACKAGE_PATH = PACKAGE_PATH = path.realpath(path.join(path.dirname(__file__), '..'))
 sys.path.append(PACKAGE_PATH)
-
-class UploadHandler(RequestHandler):
-    def get(self):
-        self.render("upload.html")
-    
-    def post(self):
-        print("hello it's here")
-        file = self.request.files['image'][0]
-        self.write("it's here")
-        print("it's in here?")
-        # check extension (later)
-        try: 
-            # fname =  path.splitext(file['filename'])
-            with open('public/images/'+ file['filename'], 'wb') as f:
-                f.write(file['body'])
-            self.finish('file is uploaded')
-            print("hello it's overrrrrrr hear!")
-        except Exception as e:
-            print(e)
-
-class ShowImage(RequestHandler):
-    def get(self):
-        return self.render("download.html")
 
 settings = {
     'template_path': 'templates',
@@ -55,7 +34,9 @@ def make_app():
 async def main():
     options.parse_command_line()
     application = Application([
-        (r"/", UploadHandler)
+        (r"/", MenuHandler),
+        (r"/upload", UploadHandler),
+        (r"/download", DownloadHandler)
     ],
         debug=True, **settings)
     http_server = tornado.httpserver.HTTPServer(application)

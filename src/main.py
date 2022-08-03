@@ -3,17 +3,21 @@ from tornado.options import define, options
 import tornado.httpserver
 import uuid, sys
 from os import path, environ
-import base64
 import asyncio
 import motor.motor_tornado
 from bson import ObjectId
+import json
 
 PACKAGE_PATH = PACKAGE_PATH = path.realpath(path.join(path.dirname(__file__), '..'))
 sys.path.append(PACKAGE_PATH)
 
 # connect to the database
-client = motor.motor_tornado.MotorClient(environ["MONGODB_URL"])
-db = client.imageDatabase
+try:
+    client = motor.motor_tornado.MotorClient(environ["MONGODB_URL"])
+    db = client['database']
+    coll = db['images']
+except Exception as e:
+    print("error is here!")
 
 define("port", default=8888, help='run on the given port', type=int)
 
@@ -38,23 +42,27 @@ class UploadHandler(RequestHandler):
                 f.write(file['body'])
 
             # connect to the images database
-            objectID = str(ObjectId())
-            new_image = await self.settings["db"]["images"].insert_one(
-                {
-                    "_id": objectID,
-                    "uuid": image_uuid,
-                    "path": "this is the path"
-                }
+            new_image = await self.settings["db"]["coll"].insert_one(
+                json.dumps(
+                    {
+                        "uuid": image_uuid,
+                        "path": "this is the path"
+                    }
+                )
+                
             )
+            print("it's here in line 50")
             created_image = await self.settings["db"]["images"].find_one(
                 {
                     "_id": new_image.inserted_id
                 }
             )
             self.set_status(201)
+            print("hello")
             return self.write(created_image)
         except Exception as e:
             print(e)
+            print("there's error right here")
 
 class ShowImageHandler(RequestHandler):
     def get(self, image_uuid=None):

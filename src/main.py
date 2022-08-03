@@ -1,22 +1,23 @@
+from urllib.error import HTTPError
 from tornado.web import Application, RequestHandler
 from tornado.options import define, options
 import tornado.httpserver
 import uuid, sys
 from os import path, environ
 import asyncio
-import motor.motor_tornado
+import motor.motor_asyncio
 from bson import ObjectId
-import json
 
 PACKAGE_PATH = PACKAGE_PATH = path.realpath(path.join(path.dirname(__file__), '..'))
 sys.path.append(PACKAGE_PATH)
 
 # connect to the database
 try:
-    client = motor.motor_tornado.MotorClient(environ["MONGODB_URL"])
+    client = motor.motor_asyncio.AsyncIOMotorClient('localhost', 27017)
     db = client['database']
     coll = db['images']
 except Exception as e:
+    print(e)
     print("error is here!")
 
 define("port", default=8888, help='run on the given port', type=int)
@@ -26,7 +27,19 @@ define("port", default=8888, help='run on the given port', type=int)
 #         self.set_status(status_code)
         
 class UploadHandler(RequestHandler):
-    async def get(self):
+    async def get(self, image_uuid=None):
+        if image_uuid is not None:
+            if (
+                image:= await self.settings["db"]["images"].find_one(
+                    {"uuid": image_uuid}
+                )
+            ) is not None:
+                return self.write(image)
+            else:
+                raise tornado.web.HTTPError(404)
+        else:
+            raise tornado.web.HTTPError(404)
+            self.write("invalid input")
         self.write({'message': '{}'.format(str(uuid.uuid4()))})
     
     async def post(self):
@@ -42,17 +55,14 @@ class UploadHandler(RequestHandler):
                 f.write(file['body'])
 
             # connect to the images database
-            new_image = await self.settings["db"]["coll"].insert_one(
-                json.dumps(
-                    {
+            dict_ = {
                         "uuid": image_uuid,
                         "path": "this is the path"
                     }
-                )
-                
-            )
+            dict_["_id"] = str(ObjectId())
+            new_image = await self.settings["db"]["images"].insert_one(dict_)
             print("it's here in line 50")
-            created_image = await self.settings["db"]["images"].find_one(
+            created_image = await self.settings["db"]["images"].find_one(      
                 {
                     "_id": new_image.inserted_id
                 }
@@ -79,8 +89,9 @@ async def main():
     options.parse_command_line()
     application = Application([
         (r"/", UploadHandler),
-        (r"/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})", ShowImageHandler)
+        (r"/([^/]+))", ShowImageHandler)
     ],
+        db=db,
         debug=True, **settings)
     http_server = tornado.httpserver.HTTPServer(application)
     http_server.listen(options.port)

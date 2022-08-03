@@ -1,15 +1,26 @@
 from tornado.web import Application, RequestHandler
 from tornado.ioloop import IOLoop
+from tornado.options import define, options
+import tornado.httpserver
 import uuid, sys
 from os import path
 import base64
+import asyncio
+
+settings = {
+    'template_path': 'src/templates',
+    'static_path': 'static',
+    'xsrf_cookies': False
+}
+
+define("port", default=8888, help='run on the given port', type=int)
 
 PACKAGE_PATH = PACKAGE_PATH = path.realpath(path.join(path.dirname(__file__), '..'))
 sys.path.append(PACKAGE_PATH)
 
 class UploadHandler(RequestHandler):
     def get(self):
-        self.write({'message': '{}'.format(str(uuid.uuid4()))})
+        self.render("upload.html")
     
     def post(self):
         print("hello it's here")
@@ -27,7 +38,8 @@ class UploadHandler(RequestHandler):
             print(e)
 
 class ShowImage(RequestHandler):
-    pass
+    def get(self):
+        return self.render("download.html")
 
 settings = {
     'template_path': 'templates',
@@ -40,7 +52,15 @@ def make_app():
     ],
         debug=True, **settings)
 
+async def main():
+    options.parse_command_line()
+    application = Application([
+        (r"/", UploadHandler)
+    ],
+        debug=True, **settings)
+    http_server = tornado.httpserver.HTTPServer(application)
+    http_server.listen(options.port)
+    await asyncio.Event().wait()
+
 if __name__ == '__main__':
-    app = make_app()
-    app.listen(3000)
-    IOLoop.instance().start()
+    asyncio.run(main())

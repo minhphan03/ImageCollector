@@ -4,6 +4,7 @@ from tornado.options import define, options
 import tornado.httpserver
 import uuid, sys
 from os import path, environ
+from datetime import datetime
 import asyncio
 import motor.motor_asyncio
 from bson import ObjectId
@@ -34,30 +35,34 @@ class UploadHandler(RequestHandler):
                     {"uuid": image_uuid}
                 )
             ) is not None:
-                return self.write(image)
+                with open(image["path"], "rb") as f:
+                    data = f.read()
+                    self.write(data)
+                    self.set_header("Content-type", "image/png")
             else:
+                print("we don't have the photo you need")
                 raise tornado.web.HTTPError(404)
         else:
+            print("invalid input")
             raise tornado.web.HTTPError(404)
-            self.write("invalid input")
-        self.write({'message': '{}'.format(str(uuid.uuid4()))})
-    
+            
+        # self.write({'message': '{}'.format(str(uuid.uuid4()))})
+
     async def post(self):
-        print("hello it's here")
         file = self.request.files['image'][0]
-        self.write("it's here")
-        print("it's in here?")
         # check extension (later)
         try: 
             fextension =  path.splitext(file['filename'])[1]
             image_uuid = str(uuid.uuid4())
-            with open('public/images/'+ image_uuid + "." + fextension, 'wb') as f:
+            image_path = 'public/images/'+ image_uuid + fextension
+            with open(image_path, 'wb') as f:
                 f.write(file['body'])
 
             # connect to the images database
             dict_ = {
                         "uuid": image_uuid,
-                        "path": "this is the path"
+                        "path": image_path,
+                        "time_created": str(datetime.now())
                     }
             dict_["_id"] = str(ObjectId())
             new_image = await self.settings["db"]["images"].insert_one(dict_)
@@ -69,15 +74,9 @@ class UploadHandler(RequestHandler):
             )
             self.set_status(201)
             print("hello")
-            return self.write(created_image)
+            return self.write(created_image["uuid"])
         except Exception as e:
             print(e)
-            print("there's error right here")
-
-class ShowImageHandler(RequestHandler):
-    def get(self, image_uuid=None):
-        if image_uuid is not None:
-            pass
 
 settings = {
     'template_path': 'templates',
@@ -89,7 +88,7 @@ async def main():
     options.parse_command_line()
     application = Application([
         (r"/", UploadHandler),
-        (r"/([^/]+))", ShowImageHandler)
+        (r"/(?P<image_uuid>[̉̉̉a-zA-Z0-9_.-]+)", UploadHandler)
     ],
         db=db,
         debug=True, **settings)

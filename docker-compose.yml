@@ -1,0 +1,15 @@
+services:
+  web:
+    build: .
+    command: python3 -u src/main.py
+    ports:
+      - "8888:8888"
+    depends_on:
+      - db
+    volumes:
+      - .:/project
+    links:
+      - db
+
+  db:
+    image: mongo:3.0.2

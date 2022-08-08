@@ -18,4 +18,3 @@ WORKDIR /project
 COPY . .
 
 CMD ["python3", "-u", "src/main.py"]
-

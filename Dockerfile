@@ -1,4 +1,4 @@
-FROM python:3.7-alpine
+FROM python:3.8-slim
 
 ENV VIRTUAL_ENV=/opt/venv 
 RUN python3 -m venv $VIRTUAL_ENV 
@@ -7,14 +7,13 @@ ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 RUN 
 # Install depencencies
 COPY requirements.txt .
-RUN apk update && \
+RUN apt-get update && \
     pip install -r requirements.txt
 
 # Copy others
-RUN mkdir /project
-RUN cd HOST_REPO
+RUN mkdir project && cd project
 
-WORKDIR /HOST_REPO
+WORKDIR /project
 
 COPY . .
 

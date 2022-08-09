@@ -8,6 +8,7 @@ An simple local image collector host using a local-backed MongoDB instance and i
 
 ### Instructions for using the API version with Postman/Insomnia
 *Disclaimer: the instructions may vary based on the app you use. I use Postman to test the API, so variations may happen if you use another app*
+
 2. Download the API testing app to your choosing
 3. To test uploading images:
     - In the target URL bar: type "http://localhost:8888/api" (no slash / at the end)

@@ -13,7 +13,7 @@ from config import *
 
 # connect to the database
 try:
-    client = motor_asyncio.AsyncIOMotorClient('local', 27017)
+    client = motor_asyncio.AsyncIOMotorClient('image_database', 27017)
     db = client['database']
     coll = db['images']
 except Exception as e:

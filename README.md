@@ -4,7 +4,9 @@ An simple local image collector host using a local-backed MongoDB instance and i
 
 ### General Instruction for both versions
 
-1. Download the Docker Image from Docker Hub using the command line (Command Prompt/Terminal) `docker run -d -p 8888:8888 minhphan0612/imagecollector:2.0` with 2.0 as the lastest version
+1. Clone this repository
+2. Make sure that you have Docker and Docker Compose isntalled. 
+3. Run `docker compose up -d` to build the app
 
 ### Instructions for using the API version with Postman/Insomnia
 *Disclaimer: the instructions may vary based on the app you use. I use Postman to test the API, so variations may happen if you use another app*

@@ -4,7 +4,7 @@ An simple local image collector host using a local-backed MongoDB instance and i
 
 ### General Instruction for both versions
 
-1. Download the Docker Image from Docker Hub using the command line (Command Prompt/Terminal) `docker image pull minhphan0612/imagecollector:1.0` with 1.0 as the lastest version
+1. Download the Docker Image from Docker Hub using the command line (Command Prompt/Terminal) `docker run -d -p 8888:8888 minhphan0612/imagecollector:2.0` with 2.0 as the lastest version
 
 ### Instructions for using the API version with Postman/Insomnia
 *Disclaimer: the instructions may vary based on the app you use. I use Postman to test the API, so variations may happen if you use another app*
@@ -16,7 +16,7 @@ An simple local image collector host using a local-backed MongoDB instance and i
     - In the request body, choose form-data type. Put "image" (no double quotes) as key (don't forget to switch the upload type to file) and upload the image into the value box
     - If successful, the request will return a UUID. Refer to this UUID to retrieve your image.
 4. To test downloading images using the UUID:
-    - In the target URL bar: type "http://localhost:8888/api/{UUID}" where UUID is the UUID of the photo (discard the curly brackets when you use the link)
+    - In the target URL bar: type "http://localhost:8888/api/{UUID}" where UUID is the UUID of the photo (discard the curly brackets when type in the uuid)
     - Choose GET as the API request type
     - Make sure the request body is set as "none"
     - Click send to send the request. If successful, the result image will be display in the result box.

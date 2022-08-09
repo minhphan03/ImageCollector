@@ -20,4 +20,4 @@ An simple local image collector host using a local-backed MongoDB instance and i
     - Make sure the request body is set as "none"
     - Click send to send the request. If successful, the result image will be display in the result box.
 
-#
+

@@ -2,15 +2,33 @@ services:
   web:
     build: .
     command: python3 -u src/main.py
+    container_name: image-web
     ports:
-      - "8888:8888"
+      - 8888:8888
     depends_on:
       - db
     volumes:
-      - .:/project
+      - collection-image:/public/images
     links:
-      - db
+      - "db"
+    networks:
+      - app-network
 
   db:
     image: mongo
-    ports: "27017:27017"
+    container_name: image_database
+    ports: 
+      - 27017:27017
+    networks:
+      - app-network
+    volumes:
+      - data-db:/data/db
+
+volumes:
+  collection-image: 
+  data-db:
+
+networks:
+  app-network:
+
+

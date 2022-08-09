@@ -10,12 +10,14 @@ An simple local image collector host using a local-backed MongoDB instance and i
 *Disclaimer: the instructions may vary based on the app you use. I use Postman to test the API, so variations may happen if you use another app*
 2. Download the API testing app to your choosing
 3. To test uploading images:
-    - In the target URL bar: type "http://localhost:8888/upload"
+    - In the target URL bar: type "http://localhost:8888/api"
     - Choose POST as the API request type
     - In the request body, choose form-data type. Put "image" (no double quotes) as key (don't forget to switch the upload type to file) and upload the image into the value box
     - If successful, the request will return a UUID. Refer to this UUID to retrieve your image.
 4. To test downloading images using the UUID:
-    - In the target URL bar: type "http://localhost:8888/download"
-    - Choose POST as the API request type
-    - In the request body, choose form-data type. Put "image-uuid" (no double quotes) as key and the uuid as text value.
+    - In the target URL bar: type "http://localhost:8888/api/{UUID}" where UUID is the UUID of the photo (discard the curly brackets when you use the link)
+    - Choose GET as the API request type
+    - Make sure the request body is set as "none"
     - Click send to send the request. If successful, the result image will be display in the result box.
+
+#

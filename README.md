@@ -1,6 +1,8 @@
 # Image Collector
 
-A simple local image collector host using a local-backed MongoDB instance and implemented asynchronously using Python Tornado. This web app is developed with additional html code for more client-friendly support. You can also test this collector using an API Platform, such as Postman. This is the backbone of the tool, which is more user-friendly with the UI version. 
+A simple local image collector host using a local-backed MongoDB instance and implemented asynchronously using Python Tornado. This web app is developed with additional html code for more client-friendly support. You can also test this collector using an API Platform, such as Postman. For any inquiries, refer to the instructions below.
+
+*The master branch is the most up-to-date one and should be the only one used for testing and using.*
 
 ### General Instruction for both versions
 

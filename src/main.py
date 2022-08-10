@@ -1,15 +1,16 @@
 
-from tornado.web import Application, StaticFileHandler
+import json
+from tornado.web import Application, StaticFileHandler, RequestHandler
 from tornado.options import define, options
 import tornado.httpserver
 from os import path
 import asyncio
-from tornado.web import RequestHandler
 from datetime import datetime
 from bson import ObjectId
 from motor import motor_asyncio
 import uuid
 from config import *
+from check_type import guess_image_mime_type
 
 # connect to the database
 try:
@@ -32,6 +33,11 @@ class UploadHandler(RequestHandler):
     
     async def post(self):
         file = self.request.files['img'][0]
+
+        # check file type
+        file_type = guess_image_mime_type(file['body'])
+        if file_type == 'image/unknown-type':
+            self.render("error.html")
         # check extension (later)
         try: 
             fextension =  path.splitext(file['filename'])[1]
@@ -43,13 +49,13 @@ class UploadHandler(RequestHandler):
             dict_ = {
                         "uuid": image_uuid,
                         "extension": fextension,
+                        "file_type": file_type,
                         "path": image_path,
                         "time_created": str(datetime.now())
                     }
             dict_["_id"] = str(ObjectId())
 
             new_image = await self.settings["db"]["images"].insert_one(dict_)
-            print("it's here in line 50")
 
             # confirm image has been added to database
             created_image = await self.settings["db"]["images"].find_one(      
@@ -57,12 +63,12 @@ class UploadHandler(RequestHandler):
                     "_id": new_image.inserted_id
                 }
             )
-            self.write(created_image["uuid"])
             self.set_status(201)
             self.render('uuid.html', uuid=image_uuid)
         except Exception as e:
             print(e)
             self.render("error.html")
+            raise tornado.web.HTTPError(500)
             
 
 class DownloadHandler(RequestHandler):
@@ -81,20 +87,20 @@ class DownloadHandler(RequestHandler):
                     with open(image["path"], "rb") as f:
                         data = f.read()
                         self.write(data)
-                        self.set_header("Content-type", "image/png")
+                        self.set_header("Content-type", image["file_type"])
                 else:
-                    print("we don't have the photo you need")
                     self.render("error.html")
                     raise tornado.web.HTTPError(404)
             else:
                 print("invalid input")
                 self.render("error.html")
-                raise tornado.web.HTTPError(404)
+                raise tornado.web.HTTPError(400)
             
             # self.render("finish.html")
         except Exception as e:
             print(e)
             self.render("error.html")
+            raise tornado.web.HTTPError(500)
 
 class APIHandler(RequestHandler):
     async def get(self, image_uuid=None):
@@ -107,19 +113,27 @@ class APIHandler(RequestHandler):
                 with open(image["path"], "rb") as f:
                     data = f.read()
                     self.write(data)
-                    self.set_header("Content-type", "image/png")
+                    self.set_header("Content-type", image["file_type"])
             else:
                 print("we don't have the photo you need")
                 raise tornado.web.HTTPError(404)
         else:
-            print("invalid input")
-            raise tornado.web.HTTPError(404)
-            
-        # self.write({'message': '{}'.format(str(uuid.uuid4()))})
+            raise tornado.web.HTTPError(400)
 
     async def post(self):
         file = self.request.files['image'][0]
-        # check extension (later)
+        file_type = guess_image_mime_type(file['body'])
+        
+        if file_type == 'image/unknown-type':
+            return self.write(
+                json.dumps(
+                    {
+                        'status': 'failed',
+                        'message': 'wrong image format'
+                    }
+                )
+            )
+        
         try: 
             fextension =  path.splitext(file['filename'])[1]
             image_uuid = str(uuid.uuid4())
@@ -130,22 +144,31 @@ class APIHandler(RequestHandler):
             # connect to the images database
             dict_ = {
                         "uuid": image_uuid,
+                        "extension": fextension,
+                        "file_type": file_type,
                         "path": image_path,
                         "time_created": str(datetime.now())
                     }
             dict_["_id"] = str(ObjectId())
             new_image = await self.settings["db"]["images"].insert_one(dict_)
-            print("it's here in line 50")
+
+            # check database that info is successfully written
             created_image = await self.settings["db"]["images"].find_one(      
                 {
                     "_id": new_image.inserted_id
                 }
             )
             self.set_status(201)
-            print("hello")
-            return self.write(created_image["uuid"])
+            return self.write(
+                json.dumps(
+                    {
+                        'status': 'success',
+                        'uuid': created_image['uuid']
+                    }
+                )
+            )
         except Exception as e:
-            print(e)
+            raise tornado.web.HTTPError(500)
 
 async def main():
     options.parse_command_line()

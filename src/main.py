@@ -1,4 +1,3 @@
-
 import json
 from tornado.web import Application, StaticFileHandler, RequestHandler
 from tornado.options import define, options
@@ -19,7 +18,6 @@ try:
     coll = db['images']
 except Exception as e:
     print(e)
-    print("error is here!")
 
 
 class MenuHandler(RequestHandler):
@@ -38,8 +36,10 @@ class UploadHandler(RequestHandler):
         file_type = guess_image_mime_type(file['body'])
         if file_type == 'image/unknown-type':
             self.render("error.html")
-        # check extension (later)
+            raise tornado.web.HTTPError(400)
+        
         try: 
+            # collect data to put into the database
             fextension =  path.splitext(file['filename'])[1]
             image_uuid = str(uuid.uuid4())
             image_path = 'public/images/'+ image_uuid + fextension
@@ -92,7 +92,6 @@ class DownloadHandler(RequestHandler):
                     self.render("error.html")
                     raise tornado.web.HTTPError(404)
             else:
-                print("invalid input")
                 self.render("error.html")
                 raise tornado.web.HTTPError(400)
             
@@ -115,7 +114,6 @@ class APIHandler(RequestHandler):
                     self.write(data)
                     self.set_header("Content-type", image["file_type"])
             else:
-                print("we don't have the photo you need")
                 raise tornado.web.HTTPError(404)
         else:
             raise tornado.web.HTTPError(400)

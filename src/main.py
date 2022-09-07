@@ -1,6 +1,8 @@
+from ast import parse
 import json
 from tornado.web import Application, StaticFileHandler, RequestHandler
-from tornado.options import define, options
+from tornado.options import define, options, parse_command_line
+import logging
 import tornado.httpserver
 from os import path
 import asyncio
@@ -13,6 +15,7 @@ from check_type import guess_image_mime_type
 
 # connect to the database
 try:
+    logging.info('Connecting to the database...')
     client = motor_asyncio.AsyncIOMotorClient('image_database', 27017)
     db = client['database']
     coll = db['images']
